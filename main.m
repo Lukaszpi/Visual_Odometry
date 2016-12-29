@@ -78,7 +78,9 @@ for i = range
     else
         assert(false);
     end
+    
     [S1, T] = processFrame(prev_img, image, S0, K);
+    T
     figure(1)
     imshow(image);
     hold on;
