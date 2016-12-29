@@ -63,6 +63,7 @@ S0 = initialization(img0, img1, K);
 %% Continuous operation
 %range = (bootstrap_frames(2)+1):last_frame;
 range = (bootstrap_frames(2)+1):100;
+
 prev_img = img1;
 for i = range
     fprintf('\n\nProcessing frame %d\n=====================\n', i);
@@ -80,7 +81,6 @@ for i = range
     end
     
     [S1, T] = processFrame(prev_img, image, S0, K);
-    T
     figure(1)
     imshow(image);
     hold on;
