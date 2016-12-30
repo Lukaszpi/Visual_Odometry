@@ -37,26 +37,7 @@ end
 
 %% Bootstrap
 bootstrap_frames = [1, 3];
-if ds == 0
-    img0 = imread([kitti_path '/00/image_0/' ...
-        sprintf('%06d.png',bootstrap_frames(1))]);
-    img1 = imread([kitti_path '/00/image_0/' ...
-        sprintf('%06d.png',bootstrap_frames(2))]);
-elseif ds == 1
-    img0 = rgb2gray(imread([malaga_path ...
-        '/malaga-urban-dataset-extract-07_rectified_800x600_Images/' ...
-        left_images(bootstrap_frames(1)).name]));
-    img1 = rgb2gray(imread([malaga_path ...
-        '/malaga-urban-dataset-extract-07_rectified_800x600_Images/' ...
-        left_images(bootstrap_frames(2)).name]));
-elseif ds == 2
-    img0 = rgb2gray(imread([parking_path ...
-        sprintf('/images/img_%05d.png',bootstrap_frames(1))]));
-    img1 = rgb2gray(imread([parking_path ...
-        sprintf('/images/img_%05d.png',bootstrap_frames(2))]));
-else
-    assert(false);
-end
+[img0,img1] = bootstrap([kitti_path '/00/image_0/'], K);
 
 S0 = initialization(img0, img1, K);
 
