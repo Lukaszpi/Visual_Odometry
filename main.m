@@ -81,15 +81,7 @@ for i = range
     end
     
     [S1, T] = processFrame(prev_img, image, S0, K);
-    figure(1)
-    imshow(image);
-    hold on;
-    plot(S1.kp(2, :), S1.kp(1, :), 'rx', 'LineWidth', 2);
-    % Makes sure that plots refresh.    
-    pause(0.01);
-    figure(2)
-    hold on;
-    cam = plotCamera('Location',T(1:3, 4)','Orientation',T(1:3, 1:3),'Opacity',0);
-    prev_img = image;
+    plot_all(image,S1,T)
     S0 = S1;
+    prev_img = image;
 end

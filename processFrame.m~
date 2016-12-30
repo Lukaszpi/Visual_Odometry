@@ -129,41 +129,41 @@ if ~isempty( S0.kp_cand0 )
     S1.T_cand   = S0.T_cand(:, found );
     S1.kp_cand0 = S0.kp_cand0(:,found);
     
-    % this is the criteria after which good triangulation of new landmarks
-    % is decided. Not good yet, but may be changed. The import thing is to
-    % keep the shape of readyToTr
-    
-    % baseline criteria -> not enough if baseline is more or less
-    % perpendicular to camera plane
-    min_baseline = 0.9;
-    baseline = sum( (T(:, 4) - S1.T_cand(13:16, :)).^2, 1);
-    
-    %%% the rotation matrices are transformed to rotation vectors. this
-    %%% allowes a direct comparison (since differences of rot matrices do
-    %%% not make sense). the project guideline proposes bearing vectors to
-    %%% compare -> implement this if you now what is meant by it
-    angle_btf = acos(0.5*(S1.T_cand(1, :) + ...
-                          S1.T_cand(6, :) + ...
-                          S1.T_cand(11,:) - 1) );
-    rot_vec = 1./(2*sin(angle_btf)).*[S1.T_cand(7, :)-S1.T_cand(10,:); ...
-                                      S1.T_cand(9, :)-S1.T_cand(3, :); ...
-                                      S1.T_cand(2, :)-S1.T_cand(5, :)];
-    rot_vec = rot_vec.*angle_btf;
-    
-    angle_T = acos( 0.5*( T(1, 1) + T(2, 2) + T(3, 3) - 1));
-    if (abs( angle_T )<1e-9)
-        rot_vec_T = zeros(3,1);
-    else
-        rot_vec_T = 1/(2*sin( angle_T ))*[T(3, 2) - T(2, 3);
-                                          T(1, 3) - T(3, 1);
-                                          T(2, 1) - T(1, 2)];
-    end
-    rot_vec_T = angle_T*rot_vec_T;
-    rot_vec_diff = abs(rot_vec - rot_vec_T); 
-    
-    % this is then the criteria for triangulating new landmarks
-    readyToTr = baseline > min_baseline^2 & ...
-                sum( rot_vec_diff.^2, 1) < 5;
+%     % this is the criteria after which good triangulation of new landmarks
+%     % is decided. Not good yet, but may be changed. The import thing is to
+%     % keep the shape of readyToTr
+%     
+%     % baseline criteria -> not enough if baseline is more or less
+%     % perpendicular to camera plane
+%     min_baseline = 0.9;
+%     baseline = sum( (T(:, 4) - S1.T_cand(13:16, :)).^2, 1);
+%     
+%     %%% the rotation matrices are transformed to rotation vectors. this
+%     %%% allowes a direct comparison (since differences of rot matrices do
+%     %%% not make sense). the project guideline proposes bearing vectors to
+%     %%% compare -> implement this if you now what is meant by it
+%     angle_btf = acos(0.5*(S1.T_cand(1, :) + ...
+%                           S1.T_cand(6, :) + ...
+%                           S1.T_cand(11,:) - 1) );
+%     rot_vec = 1./(2*sin(angle_btf)).*[S1.T_cand(7, :)-S1.T_cand(10,:); ...
+%                                       S1.T_cand(9, :)-S1.T_cand(3, :); ...
+%                                       S1.T_cand(2, :)-S1.T_cand(5, :)];
+%     rot_vec = rot_vec.*angle_btf;
+%     
+%     angle_T = acos( 0.5*( T(1, 1) + T(2, 2) + T(3, 3) - 1));
+%     if (abs( angle_T )<1e-9)
+%         rot_vec_T = zeros(3,1);
+%     else
+%         rot_vec_T = 1/(2*sin( angle_T ))*[T(3, 2) - T(2, 3);
+%                                           T(1, 3) - T(3, 1);
+%                                           T(2, 1) - T(1, 2)];
+%     end
+%     rot_vec_T = angle_T*rot_vec_T;
+%     rot_vec_diff = abs(rot_vec - rot_vec_T); 
+%     
+%     % this is then the criteria for triangulating new landmarks
+%     readyToTr = baseline > min_baseline^2 & ...
+%                 sum( rot_vec_diff.^2, 1) < 5;
 
     
     
