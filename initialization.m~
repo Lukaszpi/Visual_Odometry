@@ -156,5 +156,5 @@ S0.T_cand = []; % keep track of transformation matrices corresponding to tracked
 S0.kp_cand0 = []; % store coordinates of keypoints in their first frame
 S0.kp_cand = []; % store coordinates of keypoints in this frame
 
-T_test = [R T];
+T_test = [R T]
 end
