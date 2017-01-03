@@ -2,6 +2,7 @@ function [S1, T]= processFrame(img0, img1, S0, K)
 addpath( 'all_solns/05_ransac')
 addpath('all_solns/00_camera_projection');
 addpath( 'all_solns/04_8point/triangulation');
+addpath( 'all_solns/01_pnp');
 %% matlab point tracker (KLT)
 % the tracker developped in the exercises was first implemented. But it is
 % terribly slow (several seconds to track around 80 keypoints), so the
@@ -98,9 +99,24 @@ for i = 1:num_iterations
         end        
     end
 end
+
+
 % remove outliners
 S1.kp  = S1.kp(:, inlier_mask);
 S1.corr = S1.corr( inlier_mask);
+
+% prepare data for pose estimation via DLT  <--- ADDED
+p_2D = S1.kp(1:2,:);
+p_3D = S1.p3D(1:3, S1.corr);
+
+% call DLT algorithm                        <--- ADDED
+M_C_W = estimatePoseDLT(...
+        p_2D', ...
+        p_3D', K);
+R_C_W = M_C_W(:, 1:3);
+t_C_W = M_C_W(:, end);
+
+    
 % store the pose
 T = [ R_C_W t_C_W; 0 0 0 1];
 
@@ -164,6 +180,7 @@ if ~isempty( S0.kp_cand0 )
     % this is then the criteria for triangulating new landmarks
     readyToTr = baseline > min_baseline^2 & ...
                 sum( rot_vec_diff.^2, 1) < 5;
+    %%%             double check                 %%%
 
     
     
@@ -178,6 +195,8 @@ if ~isempty( S0.kp_cand0 )
     while i <= size(kp1_triang, 2)
         % check for all point that have the same transformation matrix
         % (because they were detected the first time in the same frame)
+        
+        %T_triang(:, i) == T_triang
         same_frame = find( sum( T_triang(:, i) == T_triang, 1) / 16 == 1 );
         first = same_frame(1);
         last = same_frame(end);
@@ -186,10 +205,9 @@ if ~isempty( S0.kp_cand0 )
         T_it = reshape( T_triang(:, i), 4, 4 );
         M0 = K*T_it(1:3, :);
         M1 = K*T(1:3, :);
-        new3D_points = [new3D_points linearTriangulation( ...
-                                            kp0_triang(:, first:last), ...
-                                            kp1_triang(:, first:last), ...
-                                            M0, M1)];
+        new3D_points = [new3D_points...
+            linearTriangulation( kp0_triang(:, first:last), ...
+            kp1_triang(:, first:last), M0, M1)];
         % jump to the next section of points
         i = last + 1;
     end
