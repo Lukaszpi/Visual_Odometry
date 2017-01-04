@@ -40,17 +40,17 @@ end
 bootstrap_frames = [1, 3];
 [img0,img1] = bootstrap([kitti_path '/00/image_0/'], K);
 
-[S0 T] = initialization(img0, img1, K);
+[S0, T, p1_in, p2_in] = initialization(img0, img1, K);
 
 plot_all(img1,S0,T);
-
+%error('first break')
 %% Continuous operation
 %range = (bootstrap_frames(2)+1):last_frame;
-range = (bootstrap_frames(2)+1):20;
+range = (bootstrap_frames(2)+1):30;
 
 prev_img = img1;
 for i = range
-    waitforbuttonpress
+    %waitforbuttonpress
     fprintf('\n\nProcessing frame %d\n=====================\n', i);
     if ds == 0
         image = imread([kitti_path '/00/image_0/' sprintf('%06d.png',i)]);

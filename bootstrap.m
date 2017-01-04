@@ -1,7 +1,7 @@
 function [ img1,img2 ] = bootstrap( path, K )
 img1 = imread([path ...
     sprintf('%06d.png',1)]);
-i = 2;
+i = 3;
 t = [0,0,0,0];
 a = 1;
 % set a limit for the minimal and maximal length of the transition vector.

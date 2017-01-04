@@ -1,4 +1,4 @@
-function [S0, T_test] = initialization(img1, img2, K)
+function [S0, T_test, p1_in, p2_in] = initialization(img1, img2, K)
 % add to path
 addpath( 'all_solns/02_detect_describe_match');
 addpath( 'all_solns/04_8point/8point');
@@ -116,16 +116,21 @@ end
 % only keep the inliers for further computations
 p1_in = p_1( :,  max_inliers );
 p2_in = p_2( :,  max_inliers );
+
+% <-- swap of the point coordinates (x <-> y) 
+p1_in_tiang = [p1_in(2,:);p1_in(1,:);p1_in(3,:)];
+p2_in_tiang = [p2_in(2,:);p2_in(1,:);p2_in(3,:)];
+
 % again compute the fundamental matrix, now with all points
-E = estimateEssentialMatrix(p1_in, p2_in, K, K);
+E = estimateEssentialMatrix(p1_in_tiang, p2_in_tiang, K, K);
 
 [R, T] = decomposeEssentialMatrix(E); % T already have an error
-[R, T] = disambiguateRelativePose(R, T, p1_in, p2_in, K, K);
+[R, T] = disambiguateRelativePose(R, T, p1_in_tiang, p2_in_tiang, K, K)
 
 % now actually calculate the 3D points
 M1 = K*eye( 3, 4);
 M2 = K*[R T];
-points_3D = linearTriangulation(p1_in, p2_in, M1, M2);
+points_3D = linearTriangulation(p1_in_tiang, p2_in_tiang, M1, M2);
 % %% some plotting. should be removed at some point
 % figure(4);
 % imshow(img1);

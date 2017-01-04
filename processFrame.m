@@ -33,7 +33,9 @@ points_3D = S0.p3D(:, S1.corr );
 % keypoints
 num_iterations = 500;
 inlier_mask = [];
-matched_query_keypoints = S1.kp(1:2, :);
+% <-- swap of the point coordinates (x <-> y) 
+matched_query_keypoints = [S1.kp(2, :); S1.kp(1, :)] ;
+
 max_num_inliers = 0;
 k = 3;
 pixel_tolerance = 10;
@@ -106,7 +108,8 @@ S1.kp  = S1.kp(:, inlier_mask);
 S1.corr = S1.corr( inlier_mask);
 
 % prepare data for pose estimation via DLT  <--- ADDED
-p_2D = S1.kp(1:2,:);
+% <-- swap of the point coordinates (x <-> y) 
+p_2D = [S1.kp(2,:);S1.kp(1,:)];
 p_3D = S1.p3D(1:3, S1.corr);
 
 % call DLT algorithm                        <--- ADDED
@@ -189,10 +192,15 @@ if ~isempty( S0.kp_cand0 )
     kp0_triang = [S1.kp_cand0(:, readyToTr ); ones(1, sum( readyToTr ) )];
     kp1_triang = [S1.kp_cand(:, readyToTr ); ones(1, sum( readyToTr ) )];
     T_triang = S1.T_cand(:, readyToTr);
+    
+    % <-- swap of the point coordinates (x <-> y) 
+    kp0_triang_ch = [kp0_triang(2,:); kp0_triang(1,:); kp0_triang(3,:)];
+    kp1_triang_ch = [kp1_triang(2,:); kp1_triang(1,:); kp1_triang(3,:)];
+    
     i = 1;
     
     % maybe a outliner removal with ransac is needed at this point
-    while i <= size(kp1_triang, 2)
+    while i <= size(kp1_triang_ch, 2)
         % check for all point that have the same transformation matrix
         % (because they were detected the first time in the same frame)
         
@@ -206,8 +214,8 @@ if ~isempty( S0.kp_cand0 )
         M0 = K*T_it(1:3, :);
         M1 = K*T(1:3, :);
         new3D_points = [new3D_points...
-            linearTriangulation( kp0_triang(:, first:last), ...
-            kp1_triang(:, first:last), M0, M1)];
+            linearTriangulation( kp0_triang_ch(:, first:last), ...
+            kp1_triang_ch(:, first:last), M0, M1)];
         % jump to the next section of points
         i = last + 1;
     end
