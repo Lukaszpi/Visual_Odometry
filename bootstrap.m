@@ -1,7 +1,6 @@
-function [ img1,img2 ] = bootstrap( path, K )
+function [ img1,img2 ] = bootstrap( path, K , img_start, img_end)
 img1 = imread([path ...
-    sprintf('%06d.png',1)]);
-i = 3;
+    sprintf('%06d.png',img_start)]);
 t = [0,0,0,0];
 a = 1;
 % set a limit for the minimal and maximal length of the transition vector.
@@ -9,7 +8,7 @@ lower_limit = 15;
 upper_limit = 20;
 while a == 1
     img2 = imread([path ...
-    sprintf('%06d.png',i)]);
+    sprintf('%06d.png',img_end)]);
 %     % I first tried it with the built-in functions but I get the feeling
 %     that their code is more buggy than ours... 
 %     cameraParams = cameraParameters('IntrinsicMatrix',K);

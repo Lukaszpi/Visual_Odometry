@@ -1,9 +1,10 @@
-function [S0, T_test, p1_in, p2_in] = initialization(img1, img2, K)
+function [S0, T_test] = initialization(img1, img2, K)
 % add to path
 addpath( 'all_solns/02_detect_describe_match');
 addpath( 'all_solns/04_8point/8point');
 addpath( 'all_solns/04_8point');
 addpath( 'all_solns/04_8point/triangulation')
+addpath( 'all_solns/01_pnp')
 %% set parameters
 % detecting and matching
 harris_patch_size = 9;
@@ -64,6 +65,9 @@ kp_hom_coord_2 = [ keypoints_2; ones( 1, num_keypoints) ];
 p_1 = kp_hom_coord_1( :, matches( matches ~= 0));
 p_2 = kp_hom_coord_2( :, matches ~= 0);
 
+p_1_sw = [ p_1(2,:); p_1(1,:); p_1(3,:),];
+p_2_sw = [ p_2(2,:); p_2(1,:); p_2(3,:),];
+
 for iterate = 1:ransac_iteration
     % randomly sample number_of_points samples between 1 and NumMatches
     % this can be done in this way because point p_1(i) corresponds with
@@ -71,16 +75,16 @@ for iterate = 1:ransac_iteration
     idx = datasample( 1:NumMatches, number_of_points, 2, 'Replace', ...
                                false);
     % apply 8-point algorithm
-    F = fundamentalEightPoint_normalized( p_1( :, idx), ...
-                                          p_2( :, idx) );
+    F = fundamentalEightPoint_normalized( p_1_sw( :, idx), ...
+                                          p_2_sw( :, idx) );
             
 
 %%% error measurement with epipolar line distance %%%%
     % this is the one I would suggest because it runs reasonably fast
     % the code is taken from
     % /all_solns/04_8point/8point/distPoint2EpipolarLine.m
-    homog_points = [p_1 , p_2];
-    epi_lines = [F.'*p_2, F*p_1];
+    homog_points = [p_1_sw , p_2_sw];
+    epi_lines = [F.'*p_2_sw, F*p_1_sw];
 
     denom = epi_lines( 1, :).^2 + epi_lines( 2, :).^2;
     cost = sqrt( ( sum( epi_lines.*homog_points, 1).^2 )./denom / NumMatches );
@@ -117,20 +121,31 @@ end
 p1_in = p_1( :,  max_inliers );
 p2_in = p_2( :,  max_inliers );
 
-% <-- swap of the point coordinates (x <-> y) 
-p1_in_tiang = [p1_in(2,:);p1_in(1,:);p1_in(3,:)];
-p2_in_tiang = [p2_in(2,:);p2_in(1,:);p2_in(3,:)];
-
+p1_in_sw = [ p1_in(2,:); p1_in(1,:); p1_in(3,:),];
+p2_in_sw = [ p2_in(2,:); p2_in(1,:); p2_in(3,:),];
 % again compute the fundamental matrix, now with all points
-E = estimateEssentialMatrix(p1_in_tiang, p2_in_tiang, K, K);
+E = estimateEssentialMatrix(p1_in_sw, p2_in_sw, K, K);
 
-[R, T] = decomposeEssentialMatrix(E); % T already have an error
-[R, T] = disambiguateRelativePose(R, T, p1_in_tiang, p2_in_tiang, K, K)
+[R, T] = decomposeEssentialMatrix(E); % T already has an error
+[R, T] = disambiguateRelativePose(R, T, p1_in_sw, p2_in_sw, K, K);
 
+%%%                     LEKARZ
 % now actually calculate the 3D points
 M1 = K*eye( 3, 4);
 M2 = K*[R T];
-points_3D = linearTriangulation(p1_in_tiang, p2_in_tiang, M1, M2);
+points_3D = linearTriangulation(p1_in_sw, p2_in_sw, M1, M2);
+
+p_2D = p2_in_sw(1:2,:);
+p_3D = points_3D(1:3,:);
+
+% call DLT algorithm                        <--- ADDED
+M_C_W = estimatePoseDLT(...
+        p_2D', ...
+        p_3D', K);
+R_C_W = M_C_W(:, 1:3);
+t_C_W = M_C_W(:, end);
+%%%                                         LEKARZ
+
 % %% some plotting. should be removed at some point
 % figure(4);
 % imshow(img1);

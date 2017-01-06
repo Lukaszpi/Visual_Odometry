@@ -38,20 +38,20 @@ end
 
 %% Bootstrap
 bootstrap_frames = [1, 3];
-[img0,img1] = bootstrap([kitti_path '/00/image_0/'], K);
+[img0,img1] = bootstrap([kitti_path '/00/image_0/'], K, bootstrap_frames(1), bootstrap_frames(2));
 
-[S0, T, p1_in, p2_in] = initialization(img0, img1, K);
-
-plot_all(img1,S0,T);
-%error('first break')
+[S0 T] = initialization(img0, img1, K);
+route = [T(:,4)];
+plot_all(img1,S0,T, route);
+%error('break one');
 %% Continuous operation
 %range = (bootstrap_frames(2)+1):last_frame;
-range = (bootstrap_frames(2)+1):30;
+range = (bootstrap_frames(2)+1):140;
 
 prev_img = img1;
 for i = range
-    %waitforbuttonpress
-    fprintf('\n\nProcessing frame %d\n=====================\n', i);
+    waitforbuttonpress
+    %fprintf('\n\nProcessing frame %d\n=====================\n', i);
     if ds == 0
         image = imread([kitti_path '/00/image_0/' sprintf('%06d.png',i)]);
     elseif ds == 1
@@ -66,7 +66,15 @@ for i = range
     end
     
     [S1, T] = processFrame(prev_img, image, S0, K);
-    plot_all(image,S1,T)
+    route = [route -T(1:3,4)];
+    plot_all(image,S1,T, route)
+    
     S0 = S1;
     prev_img = image;
+    if i==-1
+        error('stop itteration');
+    end
+    %S1.corr
+    %S1.p3D
+    size(S1.p3D,2)
 end
