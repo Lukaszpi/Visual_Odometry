@@ -20,9 +20,11 @@ initialize(pointTracker, fliplr(S0.kp(1:2, :)'),  img0);
 new_kp = [fliplr( points )'; ones(1, size(points, 1))];
 % now only keep the keypoints and their correspondences that could be
 % tracked
-S1.kp = new_kp(:, scores > 0.995 );
-S1.corr = S0.corr( scores > 0.995 ); % array that stores indices of corresponding S1.p3D
+S1.kp = new_kp(:, scores > 0.8 );
+S1.corr = S0.corr( scores > 0.8); % array that stores indices of corresponding S1.p3D
 points_3D = S0.p3D(:, S1.corr );
+
+
 
 %% P3P RANSAC
 %%% RANSAC %%% -> This for loop is taken one to one from the exercise.
@@ -240,6 +242,8 @@ else
     S1.T_cand = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
+
+
     
 %% updating landmarks
 
@@ -259,5 +263,21 @@ keypoints = keypoints(:, sum( ismember( keypoints, ...
 S1.kp_cand0 = [S1.kp_cand0 keypoints];
 S1.kp_cand = [S1.kp_cand keypoints];
 S1.T_cand = [S1.T_cand repmat(T(:), 1, size( keypoints, 2))];
+
+% 
+% Checking whether a point is directly in front of the camera, far away of
+% the camera or behind the camera
+a = [];
+for i = 1:size(S1.kp,2)
+    check_behind = T*[S1.p3D(1:3,S1.corr(i)); 1];
+    if norm(S1.p3D(1:3,S1.corr(i))-T(1:3)) >100 || norm(S1.p3D(1:2,S1.corr(i))-T(1:2))<1 || check_behind(end) < 0
+        a = [a 0];
+    else
+        a = [a 1];
+    end
+end
+S1.kp = S1.kp( :, logical(a));
+S1.corr = S1.corr(logical(a));
+
 
 end
