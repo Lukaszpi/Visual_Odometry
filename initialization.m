@@ -4,6 +4,7 @@ addpath( 'all_solns/02_detect_describe_match');
 addpath( 'all_solns/04_8point/8point');
 addpath( 'all_solns/04_8point');
 addpath( 'all_solns/04_8point/triangulation')
+addpath( 'all_solns/04_8point/plot')
 %% set parameters
 % detecting and matching
 harris_patch_size = 9;
@@ -64,6 +65,10 @@ kp_hom_coord_2 = [ keypoints_2; ones( 1, num_keypoints) ];
 p_1 = kp_hom_coord_1( :, matches( matches ~= 0));
 p_2 = kp_hom_coord_2( :, matches ~= 0);
 
+% <-- swap of the point coordinates (x <-> y) 
+p_1_ch = [p_1(2,:);p_1(1,:);p_1(3,:)];
+p_2_ch = [p_2(2,:);p_2(1,:);p_2(3,:)];
+
 for iterate = 1:ransac_iteration
     % randomly sample number_of_points samples between 1 and NumMatches
     % this can be done in this way because point p_1(i) corresponds with
@@ -71,16 +76,17 @@ for iterate = 1:ransac_iteration
     idx = datasample( 1:NumMatches, number_of_points, 2, 'Replace', ...
                                false);
     % apply 8-point algorithm
-    F = fundamentalEightPoint_normalized( p_1( :, idx), ...
-                                          p_2( :, idx) );
+    F = fundamentalEightPoint_normalized( p_1_ch( :, idx), ...
+                                          p_2_ch( :, idx) );
             
 
 %%% error measurement with epipolar line distance %%%%
     % this is the one I would suggest because it runs reasonably fast
     % the code is taken from
     % /all_solns/04_8point/8point/distPoint2EpipolarLine.m
-    homog_points = [p_1 , p_2];
-    epi_lines = [F.'*p_2, F*p_1];
+    %cost = distPoint2EpipolarLine(F,p_1_ch,p_2_ch)
+    homog_points = [p_1_ch , p_2_ch];
+    epi_lines = [F.'*p_2_ch, F*p_1_ch];
 
     denom = epi_lines( 1, :).^2 + epi_lines( 2, :).^2;
     cost = sqrt( ( sum( epi_lines.*homog_points, 1).^2 )./denom / NumMatches );
@@ -131,23 +137,8 @@ E = estimateEssentialMatrix(p1_in_tiang, p2_in_tiang, K, K);
 M1 = K*eye( 3, 4);
 M2 = K*[R T];
 points_3D = linearTriangulation(p1_in_tiang, p2_in_tiang, M1, M2);
-% %% some plotting. should be removed at some point
-% figure(4);
-% imshow(img1);
-% hold on;
-% plot(p_1(2, :), p_1(1, :), 'rx', 'Linewidth', 2);
-% t = find( matches ~= 0 );
-% t = t( ~max_inliers );
-% matches( t ) = zeros( length(t), 1);
-% plotMatches(matches, keypoints_2, keypoints_1);
-% 
-% check1 = K*points_3D(1:3, :);
-% check1 = check1(1:2, :)./check1(3,:);
-% 
-% figure(1)
-% imshow(img1); hold on;
-% plot(check1(2, :), check1(1, :), 'rx', 'LineWidth', 2);
-% plot(p_1(2, :), p_1(1, :), 'bx', 'LineWidth', 2);
+P = points_3D;
+
 %% construct state space struct
 % stores keypoints of current frame
 S0.kp = p2_in;

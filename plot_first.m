@@ -19,7 +19,7 @@ figure(1)
 subplot(2,1,1)
 imshow(image);
 hold on;
-plot(S1.kp(2, :), S1.kp(1, :), 'rx', 'LineWidth', 2);
+plot(S1.kp(2, S1.corr(1:10)), S1.kp(1, S1.corr(1:10)), 'rx', 'LineWidth', 2);
 % 
 % % Makes sure that plots refresh.    
 % pause(0.01);
@@ -35,13 +35,13 @@ hold on;
 %pos = T(1:3,4);
 %plot3(pos(1),pos(2),pos(3),20,'x')
 cam = plotCamera('Location',T(1:3, 4)','Orientation',T(1:3, 1:3),'Opacity',0, 'Size', 2);
-cam = plotCamera('Location',T1(1:3, 4)','Orientation',T1(1:3, 1:3),'Opacity',0, 'Size', 2, 'Color', 'g');
+%cam = plotCamera('Location',T1(1:3, 4)','Orientation',T1(1:3, 1:3),'Opacity',0, 'Size', 2, 'Color', 'g');
 %plotCoordinateFrame(T(1:3, 1:3),T(1:3, 4), 100);
 %plot3(S1.p3D(1,:),S1.p3D(2,:),S1.p3D(3,:),2,'o')
 %S1.kp
 %scatter3((S1.kp(2,:)-560)/100,(-S1.kp(1,:)+240)/100,S1.kp(3,:),2, 'x')
 %S1.p3D
-scatter3(S1.p3D(1,:),S1.p3D(2,:),S1.p3D(3,:),2,'o')
+scatter3(S1.p3D(1,S1.corr(1:10)),S1.p3D(2,S1.corr(1:10)),S1.p3D(3,S1.corr(1:10)),2,'o')
 axis equal
 rotate3d on;
 grid
