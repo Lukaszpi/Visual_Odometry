@@ -67,7 +67,7 @@ range = (bootstrap_frames(2)+1):150;
 
 prev_img = img1;
 for i = range
-    waitforbuttonpress
+    
     fprintf('\n\nProcessing frame %d\n=====================\n', i);
     if ds == 0
         image = imread([kitti_path '/00/image_0/' sprintf('%06d.png',i)]);

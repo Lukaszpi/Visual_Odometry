@@ -62,7 +62,7 @@ if ~isempty( S0.kp_cand0 )
     
     % this is then the criteria for triangulating new landmarks
     readyToTr = baseline > min_baseline^2 & ...
-                sum( rot_vec_diff.^2, 1) < 5;
+                sum( rot_vec_diff.^2, 1) > 0.01;
     
     % initialize the triangulation with the points that are decided to be
     % well
@@ -71,7 +71,7 @@ if ~isempty( S0.kp_cand0 )
     
     kp0_triang_sw = [kp0_triang(2,:); kp0_triang(1,:); kp0_triang(3,:)];
     kp1_triang_sw = [kp1_triang(2,:); kp1_triang(1,:); kp1_triang(3,:)];
-    kp1_triang_sw - kp0_triang_sw
+    %kp1_triang_sw - kp0_triang_sw
     
     T_triang = S1.T_cand(:, readyToTr);
     i = 1;
@@ -98,7 +98,7 @@ if ~isempty( S0.kp_cand0 )
 % places all the points next to the origin hence after some time when new
 % points are used for the new posee the pose lookes into the origin.
 %
-%
+% %
 %         % taken from run_sfm.m start
 %         T_it = reshape( T_triang(:, i), 4, 4 );
 %         
@@ -121,9 +121,9 @@ if ~isempty( S0.kp_cand0 )
 %         M2 = K * T1;
 %         M1 = K * T2;
 %         new3D_triang_points = linearTriangulation(kp1_triang_sw(:, first:last),...
-%             kp0_triang_sw(:, first:last),M2,M1)
+%             kp0_triang_sw(:, first:last),M2,M1);
 %         
-%         new3D_triang_points = T*new3D_triang_points
+%         new3D_triang_points = T_it*new3D_triang_points;
 %         
 %         new3D_points = [new3D_points new3D_triang_points];
 %         % taken from run_sfm.m end
@@ -143,7 +143,7 @@ if ~isempty( S0.kp_cand0 )
     end
     %check if the point is in front of the camera
     if ~isempty( new3D_points )
-        T_check = [T(1:3,1:3), -T(1:3,1:3)'*T(1:3,4)]
+        T_check = [T(1:3,1:3), -T(1:3,1:3)'*T(1:3,4)];
         point_prim = T_check*new3D_points;
         new3D_points = new3D_points(:,point_prim(3,:) > 0);
         S1.corr = [S1.corr  (size(S1.p3D, 2) + 1: ...
@@ -163,5 +163,3 @@ else
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     end
 end
-
-    

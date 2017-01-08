@@ -131,7 +131,7 @@ p2_in_tiang = [p2_in(2,:);p2_in(1,:);p2_in(3,:)];
 E = estimateEssentialMatrix(p1_in_tiang, p2_in_tiang, K, K);
 
 [R, T] = decomposeEssentialMatrix(E);
-[R, T] = disambiguateRelativePose(R, T, p1_in_tiang, p2_in_tiang, K, K)
+[R, T] = disambiguateRelativePose(R, T, p1_in_tiang, p2_in_tiang, K, K);
 
 % now actually calculate the 3D points
 M1 = K*eye( 3, 4);
@@ -141,7 +141,7 @@ points_3D = linearTriangulation(p1_in_tiang, p2_in_tiang, M1, M2);
 % Check if the points are in front of the camera
 T_check = [R, -R'*T];
 P_prim = T_check*points_3D;
-points_3D = points_3D(:,P_prim(3,:)>0)
+points_3D = points_3D(:,P_prim(3,:)>0);
 
 %% construct state space struct
 % stores keypoints of current frame
