@@ -86,6 +86,50 @@ if ~isempty( S0.kp_cand0 )
         first = same_frame(1);
         last = same_frame(end);
         
+        
+% Lukasz note - I've noticed that the algorithm in run_sfm.m works better
+% with the 3D points estimation when the camera 1 is in the origin without
+% the rotation, hence I tried to predict the points from the eye(3,4) pose
+% and then translate them by the camera coordinates. The part until linear
+% triangulation should be fine if there is enought points to determine the
+% relative pose. I haven't found the formula to translate these points with
+% the rotation and believe that it is the key. Or maybe we just need to
+% have slightly different T to estimate M in original code. Current one
+% places all the points next to the origin hence after some time when new
+% points are used for the new posee the pose lookes into the origin.
+%
+%
+%         % taken from run_sfm.m start
+%         T_it = reshape( T_triang(:, i), 4, 4 );
+%         
+%         E = estimateEssentialMatrix(kp1_triang_sw(:, first:last),...
+%             kp0_triang_sw(:, first:last), K, K);
+% 
+%         % Extract the relative camera positions (R,T) from the essential matrix
+% 
+%         % Obtain extrinsic parameters (R,t) from E
+%         [Rots,u3] = decomposeEssentialMatrix(E);
+% 
+%         % Disambiguate among the four possible configurations
+%         [R_C2_W,T_C2_W] = disambiguateRelativePose(Rots,u3,...
+%             kp1_triang_sw(:, first:last),...
+%             kp0_triang_sw(:, first:last),K,K);
+% 
+%         % Triangulate a point cloud using the final transformation (R,T)
+%         T2 = eye(3,4);
+%         T1 = [R_C2_W, T_C2_W];
+%         M2 = K * T1;
+%         M1 = K * T2;
+%         new3D_triang_points = linearTriangulation(kp1_triang_sw(:, first:last),...
+%             kp0_triang_sw(:, first:last),M2,M1)
+%         
+%         new3D_triang_points = T*new3D_triang_points
+%         
+%         new3D_points = [new3D_points new3D_triang_points];
+%         % taken from run_sfm.m end
+
+
+        
         %and extract all of these points at once
         T_it = reshape( T_triang(:, i), 4, 4 );
         M0 = K*T_it(1:3, :);

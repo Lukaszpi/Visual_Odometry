@@ -1,4 +1,4 @@
-function [S0, T_test, p1_in, p2_in] = initialization(img1, img2, K)
+function [S0, T_final] = initialization(img1, img2, K)
 % add to path
 addpath( 'all_solns/02_detect_describe_match');
 addpath( 'all_solns/04_8point/8point');
@@ -24,8 +24,6 @@ number_of_points = 8; % fixed value
 pixel_threshold = 0.15; % obtained by trial and error, can be changed
 max_inliers = 0; % just a pre allocation, is necessary
 
-
-
 %% detecting and matching of keypoints
 % img0: get and describe keypoints
 harris_scores = harris(img1, harris_patch_size, harris_kappa);
@@ -44,6 +42,16 @@ descriptors_2 = describeKeypoints(img2, keypoints_2, descriptor_radius);
 % value of matches -> img1 keypoint index
 matches = matchDescriptors(descriptors_2, descriptors, match_lambda);
 NumMatches = sum( matches ~= 0 );
+
+% make homogenous points (so just add a 1 for the z-coord)
+kp_hom_coord_1 = [ keypoints_1; ones( 1, num_keypoints) ];
+kp_hom_coord_2 = [ keypoints_2; ones( 1, num_keypoints) ];
+% only keep the ones that were matched. After this the p_1(i) corresponds
+% to p_2(i)
+p_1 = kp_hom_coord_1( :, matches( matches ~= 0));
+p_2 = kp_hom_coord_2( :, matches ~= 0);
+
+
 %%%% add random outliners -> can be used to test the outliner detection by ransac %%%%
 % for i = 1:length(matches)
 %     if matches(i) == 0 && rand() < 0.01
@@ -57,13 +65,6 @@ NumMatches = sum( matches ~= 0 );
 % NumMatches = sum( matches ~= 0 );
 %%%%%
 %% apply RANSAC with 8-point algorithm
-% make homogenous points (so just add a 1 for the z-coord)
-kp_hom_coord_1 = [ keypoints_1; ones( 1, num_keypoints) ];
-kp_hom_coord_2 = [ keypoints_2; ones( 1, num_keypoints) ];
-% only keep the ones that were matched. After this the p_1(i) corresponds
-% to p_2(i)
-p_1 = kp_hom_coord_1( :, matches( matches ~= 0));
-p_2 = kp_hom_coord_2( :, matches ~= 0);
 
 % <-- swap of the point coordinates (x <-> y) 
 p_1_ch = [p_1(2,:);p_1(1,:);p_1(3,:)];
@@ -78,13 +79,12 @@ for iterate = 1:ransac_iteration
     % apply 8-point algorithm
     F = fundamentalEightPoint_normalized( p_1_ch( :, idx), ...
                                           p_2_ch( :, idx) );
-            
-
+    
 %%% error measurement with epipolar line distance %%%%
     % this is the one I would suggest because it runs reasonably fast
     % the code is taken from
     % /all_solns/04_8point/8point/distPoint2EpipolarLine.m
-    %cost = distPoint2EpipolarLine(F,p_1_ch,p_2_ch)
+    % cost = distPoint2EpipolarLine(F,p_1_ch,p_2_ch)
     homog_points = [p_1_ch , p_2_ch];
     epi_lines = [F.'*p_2_ch, F*p_1_ch];
 
@@ -118,7 +118,7 @@ for iterate = 1:ransac_iteration
         max_inliers = inliers;
     end
 end
-%%
+%% Determine the camera poses
 % only keep the inliers for further computations
 p1_in = p_1( :,  max_inliers );
 p2_in = p_2( :,  max_inliers );
@@ -130,27 +130,31 @@ p2_in_tiang = [p2_in(2,:);p2_in(1,:);p2_in(3,:)];
 % again compute the fundamental matrix, now with all points
 E = estimateEssentialMatrix(p1_in_tiang, p2_in_tiang, K, K);
 
-[R, T] = decomposeEssentialMatrix(E); % T already have an error
+[R, T] = decomposeEssentialMatrix(E);
 [R, T] = disambiguateRelativePose(R, T, p1_in_tiang, p2_in_tiang, K, K)
 
 % now actually calculate the 3D points
 M1 = K*eye( 3, 4);
 M2 = K*[R T];
 points_3D = linearTriangulation(p1_in_tiang, p2_in_tiang, M1, M2);
-P = points_3D;
+
+% Check if the points are in front of the camera
+T_check = [R, -R'*T];
+P_prim = T_check*points_3D;
+points_3D = points_3D(:,P_prim(3,:)>0)
 
 %% construct state space struct
 % stores keypoints of current frame
-S0.kp = p2_in;
+S0.kp = p2_in(:,P_prim(3,:)>0);
 % stores all 3D points detected (so the whole map)
 S0.p3D = points_3D(1:3, :);
 % the i-th entry of S0.corr links the i-th keypoint in S0.kp to the 3D
 % point S0.p3D( S0.corr( i ) )
-S0.corr = 1:size(p2_in, 2);
+S0.corr = 1:size(points_3D, 2);
 % the following matrices are used for extracting new landmarks
 S0.T_cand = []; % keep track of transformation matrices corresponding to tracked keypoints
 S0.kp_cand0 = []; % store coordinates of keypoints in their first frame
 S0.kp_cand = []; % store coordinates of keypoints in this frame
 
-T_test = [R T];
+T_final = [R T];
 end

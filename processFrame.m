@@ -33,7 +33,7 @@ points_3D = S0.p3D(:, S1.corr );
 % It effectively tries to estimate the new pose with 2D -> 3D point
 % correspondeces. The outliers found by RANSAC are conviently removed as
 % keypoints
-num_iterations = 500;
+num_iterations = 1000;
 inlier_mask = [];
 % <-- swap of the point coordinates (x <-> y) 
 matched_query_keypoints = [S1.kp(2, :); S1.kp(1, :)] ;
@@ -131,7 +131,6 @@ T = [ R_C_W t_C_W; 0 0 0 1];
 
 [S1] = new3DLandmarks(img0, img1, T, K, S1, S0);
 
-    
 %% updating landmarks
 
 % get candidate keypoints

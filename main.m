@@ -1,6 +1,6 @@
 %% Setup
 clear all; close all; clc; 
-ds = 2; % 0: KITTI, 1: Malaga, 2: parking
+ds = 0; % 0: KITTI, 1: Malaga, 2: parking
 parking_path = 'parking';
 kitti_path = 'kitti';
 
@@ -59,7 +59,7 @@ else
     assert(false);
 end
 
-[S0, T, p1_in, p2_in] = initialization(img0, img1, K);
+[S0, T] = initialization(img0, img1, K);
 plot_all(img1,S0,[T(1:3,1:3) -T(1:3,1:3)'*T(1:3,4)]);
 %% Continuous operation
 %range = (bootstrap_frames(2)+1):last_frame;
